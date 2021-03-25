@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Pycharm
+.idea/
+
+# Jupyter notebooks
+/notebooks/
+
+# Settings (potentially containing application secrets)
+/settings.ini
+
