@@ -11,8 +11,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Amd(ProductProvider):
-    name = "AMD"
-
     def get_available_products(self) -> set[Product]:
         resp = requests.get(
             "https://www.amd.com/en/direct-buy/it", headers=DEFAULT_HEADERS, timeout=TIMEOUT_SECONDS

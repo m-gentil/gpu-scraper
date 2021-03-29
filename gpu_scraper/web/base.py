@@ -10,9 +10,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class ProductProvider(ABC):
     @property
-    @abstractmethod
     def name(self) -> str:
-        pass
+        return self.__class__.__name__
 
     @abstractmethod
     def get_available_products(self) -> set[Product]:
