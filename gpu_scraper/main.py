@@ -1,15 +1,19 @@
 import logging
 import sys
 import time
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from gpu_scraper.config import DEBUG, TELEGRAM_CHAT_ID, TELEGRAM_TOKEN
 from gpu_scraper.notifications.telegram import TelegramNotifier
 from gpu_scraper.web.amd import Amd
 from gpu_scraper.web.base import ProductProvider
+from gpu_scraper.web.cast_informatica import CastInformatica
 
 _LOGGER = logging.getLogger(__name__)
 
 POLLING_INTERVAL_SECONDS = 2
+
+ALL_PROVIDERS = [Amd(), CastInformatica()]
 
 
 def poll_provider(provider: ProductProvider, notifier: TelegramNotifier) -> None:
@@ -20,7 +24,7 @@ def poll_provider(provider: ProductProvider, notifier: TelegramNotifier) -> None
     while True:
         time.sleep(POLLING_INTERVAL_SECONDS)
         curr_products = provider.retry_get_available_products()
-        _LOGGER.info(f"{provider.name}: polled {len(curr_products)} available products")
+        _LOGGER.debug(f"{provider.name}: polled {len(curr_products)} available products")
 
         new_products = curr_products - last_products
 
@@ -37,12 +41,13 @@ def main() -> None:
         stream=sys.stdout,
         format="%(asctime)s\t%(levelname)s:\t%(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging.INFO,
+        level=logging.DEBUG,
     )
     _LOGGER.info("Starting...")
     notifier = TelegramNotifier(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, debug_mode=DEBUG)
 
-    poll_provider(Amd(), notifier)
+    with ThreadPoolExecutor() as tpe:
+        [tpe.submit(poll_provider, provider, notifier) for provider in ALL_PROVIDERS]
 
 
 if __name__ == "__main__":

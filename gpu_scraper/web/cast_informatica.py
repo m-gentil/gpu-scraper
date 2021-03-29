@@ -21,7 +21,7 @@ def _get_paginated_results(page_id: int) -> set[Product]:
     resp.raise_for_status()
 
     parsed_resp = resp.json()
-    print(f"Getting page {page_id}")
+
     return {
         Product(name=product["name"], link=product["url"], price=product["price_amount"])
         for product in parsed_resp["products"]
