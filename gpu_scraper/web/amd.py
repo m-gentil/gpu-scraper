@@ -20,9 +20,9 @@ class Amd(ProductProvider):
         soup = BeautifulSoup(resp.text, "html.parser")
         products_on_sale = soup.find_all("div", class_="direct-buy")
 
-        if len(products_on_sale) == 0:
-            _LOGGER.warning("AMD: No products on sale")
-            raise ValueError("AMD: No products on sale")
+        if len(products_on_sale) < 10:
+            _LOGGER.warning(f"AMD: Only {len(products_on_sale)} products on sale")
+            raise ValueError("AMD: Too few products on sale")
 
         products: set[Product] = set()
         for element in products_on_sale:

@@ -24,9 +24,13 @@ def poll_provider(provider: ProductProvider, notifier: TelegramNotifier) -> None
     while True:
         time.sleep(POLLING_INTERVAL_SECONDS)
         curr_products = provider.retry_get_available_products()
-        _LOGGER.debug(f"{provider.name}: polled {len(curr_products)} available products")
+        _LOGGER.info(f"{provider.name}: polled {len(curr_products)} available products")
 
         new_products = curr_products - last_products
+
+        if new_products:
+            _LOGGER.info(f"{provider.name} OLD: {last_products}")
+            _LOGGER.info(f"{provider.name} NEW: {curr_products}")
 
         for product in new_products:
             _LOGGER.info(f"{provider.name}: NEW {product}")
@@ -41,7 +45,7 @@ def main() -> None:
         stream=sys.stdout,
         format="%(asctime)s\t%(levelname)s:\t%(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging.DEBUG,
+        level=logging.INFO,
     )
     _LOGGER.info("Starting...")
     notifier = TelegramNotifier(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, debug_mode=DEBUG)

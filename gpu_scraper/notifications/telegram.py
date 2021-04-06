@@ -2,7 +2,8 @@ import logging
 from dataclasses import dataclass
 
 import requests
-from tenacity import retry, wait_exponential
+from requests import HTTPError
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from gpu_scraper.product import Product
 
@@ -16,7 +17,11 @@ class TelegramNotifier:
 
     debug_mode: bool = False
 
-    @retry(wait=wait_exponential(multiplier=1, min=1, max=10))  # type: ignore
+    @retry(
+        wait=wait_exponential(multiplier=1, min=1, max=10),  # type: ignore
+        reraise=True,
+        stop=stop_after_attempt(5),  # type: ignore
+    )
     def _send_message(self, message: str) -> None:
         _LOGGER.info(f"Notifier: sending {message}")
         if self.debug_mode:
@@ -29,6 +34,9 @@ class TelegramNotifier:
 
     def notify_product(self, product: Product, provider_name: str) -> None:
         price_str = f" for € {product.price}" if product.price else ""
-        self._send_message(
-            f"{provider_name} has {product.name} at [link]({product.link}){price_str}"
-        )
+        try:
+            self._send_message(
+                f"{provider_name} has {product.name} at [link]({product.link}){price_str}"
+            )
+        except HTTPError:
+            _LOGGER.exception(f"Error while sending {product} by {provider_name}")
